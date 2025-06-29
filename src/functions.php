@@ -133,9 +133,9 @@ function subscribeEmail(string $email): bool
 		? json_decode(file_get_contents($pending_file), true) ?? []
 		: [];
 
-	// If already pending, skip
+	// If already in pending list then skip
 	if (array_key_exists($email, $pending)) {
-		return true; // Already pending — no need to add again
+		return true;
 	}
 
 	// Load verified subscribers
@@ -143,14 +143,14 @@ function subscribeEmail(string $email): bool
 		? json_decode(file_get_contents($subscribers_file), true) ?? []
 		: [];
 
-	// If already verified, skip
+	// If already in verified list then skip
 	if (in_array($email, $subscribers)) {
-		return true; // Already verified — no need to resend
+		return true;
 	}
 
 	// Generate code and save
 	$code = generateVerificationCode();
-	$pending[$email] = ['code' => $code];
+	$pending[$email] = ['code' => $code, 'timestamp' => time()];
 	file_put_contents($pending_file, json_encode($pending, JSON_PRETTY_PRINT), LOCK_EX);
 
 	// Send verification email
