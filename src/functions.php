@@ -248,12 +248,38 @@ function sendTaskReminders(): void
  */
 function sendTaskEmail(string $email, array $pending_tasks): bool
 {
+	require_once __DIR__ . '/mail.php';
+
 	$subject = 'Task Planner - Pending Tasks Reminder';
 
-	$body = empty($pending_tasks)
-		? "You have no pending tasks."
-		: "Here are your pending tasks:\n" . implode("\n", array_map(fn($t) => "- {$t['name']}", $pending_tasks));
+	// Create HTML list of tasks
+	$taskList = empty($pending_tasks)
+		? '<p>You have no pending tasks 🎉</p>'
+		: '<ul style="padding-left: 20px;">' .
+		implode('', array_map(
+			fn($t) => "<li style='margin-bottom: 6px;'>{$t['name']}</li>",
+			$pending_tasks
+		)) .
+		'</ul>';
 
-	return sendMail($email, $subject, $body);
+	// Generate unsubscribe link
+	$unsubscribeLink = 'http://localhost:8000/unsubscribe.php?email=' . urlencode($email);
+
+	// Compose HTML email body
+	$body = "
+		<div style='font-family: Arial, sans-serif; line-height: 1.6;'>
+			<h2 style='color: #2c3e50;'>⏰ Task Planner Reminder</h2>
+			<p>Hi, here are your pending tasks:</p>
+			$taskList
+			<hr style='margin: 20px 0;'>
+			<p style='font-size: 14px;'>
+				Don't want to receive these emails? 
+				<a href='$unsubscribeLink' style='color: #e74c3c;'>Unsubscribe</a>
+			</p>
+		</div>
+	";
+
+	return sendMail($email, $subject, $body, true); // Send as HTML
 }
+
 

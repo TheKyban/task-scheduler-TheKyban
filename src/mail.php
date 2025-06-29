@@ -22,7 +22,7 @@ function loadEnv(string $path): void
 }
 
 
-function sendMail(string $to, string $subject, string $body): bool
+function sendMail(string $to, string $subject, string $body, bool $isHtml = false): bool
 {
     try {
         // Load environment variables
@@ -42,7 +42,13 @@ function sendMail(string $to, string $subject, string $body): bool
         $mail->setFrom($_ENV['EMAIL_USER'], 'Task Planner');
         $mail->addAddress($to);
         $mail->Subject = $subject;
-        $mail->Body = $body;
+        if ($isHtml) {
+            $mail->isHTML(true);
+            $mail->Body = $body;
+            $mail->AltBody = strip_tags($body); // fallback
+        } else {
+            $mail->Body = $body;
+        }
         return $mail->send();
     } catch (Exception $e) {
         echo "Mailer Error: " . $mail->ErrorInfo;
